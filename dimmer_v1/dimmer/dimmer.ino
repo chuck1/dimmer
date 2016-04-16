@@ -36,14 +36,87 @@
 #define GATE_B 10  //pin for triac gate
 #define PULSE   4  //trigger pulse width (counts)
 
-struct Item {
-	Item	insert(Item * i)
+struct Item
+{
+	Item(unsigned int count):
+		_M_count(count),
+		_M_prev(0),
+		_M_next(0)
 	{
-		if(_M_count >= i->_M_count) {
-			
+	}
+	
+	void		print()
+	{
+		printf("%u\n", _M_count);
+
+		if(_M_next != 0) {
+			_M_next->print();
 		}
 	}
+
+	Item *		insert(Item * i)
+	{
+		if(i->_M_count > _M_count) {
+			if(_M_next == 0) {
+				_M_next = i;
+				i->_M_prev = this;
+			} else {
+				return _M_next->insert(i);
+			}
+		} else {
+			if(_M_prev == 0) {
+				_M_prev = i;
+				i->_M_next = this;
+			} else {
+				_M_prev->_M_next = i;
+				i->_M_prev = _M_prev;
+				_M_prev = i;
+				i->_M_next = this;
+			}
+		}
+
+		return seek0();
+	}
+	void		swap_prev()
+	{
+		// 0 - 1 - 2 - 3
+		// 0 - 2 - 1 - 3
+
+		if(_M_prev == 0) return;
+
+		i1 = _M_prev;
+		i0 = i1->_M_prev;
+		i2 = this;
+		i3 = _M_next;
+		
+		if(i0) {
+			i0->_M_next = i2;
+		}
+
+		i2->_M_prev = i0;
+		i2->_M_next = i1;
+		i1->_M_prev = i2;
+		i1->_M_next = i3;
+
+		if(i3) i3->_M_prev = i1;
+	}
+	Item *		seek0()
+	{
+		if(_M_prev == 0) {
+			return this;
+		} else {
+			return _M_prev->seek0();
+		}
+	}
+
+	unsigned int	_M_count;
+
+	Item *		_M_prev;
+	Item *		_M_next;
 };
+
+Item *	item_gate_h[2];
+Item *	item_gate_l[2];
 
 unsigned short dimmer_A = 0;
 unsigned short dimmer_B = 200;
@@ -55,6 +128,8 @@ int half_cycles = 0;
 #define CODE_B_SET 1
 #define CODE_A_GET 2
 #define CODE_B_GET 3
+
+int gate[2];
 
 int index = 0;
 
@@ -122,6 +197,15 @@ void setup_wire()
 void setup(){
 
   setup_wire();
+
+  gate[0] = 9;
+  gate[1] = 10;
+
+  item_gate_h[0] = new Item(0);
+  item_gate_h[1] = new Item(0);
+  item_gate_l[0] = new Item(0);
+  item_gate_l[1] = new Item(0);
+
 
   // debugging
   Serial.begin(9600);
