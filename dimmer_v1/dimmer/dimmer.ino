@@ -26,6 +26,21 @@
 // 16 microseconds.  1/2 wave of a 60Hz AC signal
 // is about 520 counts (8,333 microseconds).
 
+// Modified by Charles Rymal, April, 2016
+// 
+// A linked list structure is used to control an arbitrary number of triacs while
+// using only timer 1 of the Atmega chip.
+// 
+// Instructions:
+// To leave the triac off, set the dimmer to 0
+// To turn the triac to fully on, set the dimmer to a low value, like 10. A value below
+// 10 but greater than 0 will pulse the triac too early in the cycle and the triac will not
+// stay on, resulting in flicker
+// 
+// Bugs:
+// If two channels are set to a very close level, they will both be brighter than if only
+// one was on.
+
 #define DIMMER_TIMER (1)
 #define DIMMER_WIRE (1)
 #define DIMMER_ZCI (1)
